@@ -36,6 +36,9 @@ jobs:
             echo "VERCEL_TOKEN not set; skipping project creation."
             exit 0
           fi
+          # Normalize project name: lowercase, replace invalid chars, collapse hyphens, trim, truncate to 100 chars
+          NORMALIZED=$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/-+/-/g' | sed -E 's/^-|-$//g')
+          PROJECT_NAME=$(echo "$NORMALIZED" | cut -c1-100)
           echo "Ensuring Vercel project exists: $PROJECT_NAME"
           if [ -n "$VERCEL_ORG_ID" ]; then
             # --team is deprecated; use --scope and use --confirm to skip prompts
@@ -50,11 +53,15 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           PROJECT_NAME: ${{ github.event.repository.name }}
         run: |
+          # Normalize project name before deploy
+          NORMALIZED=$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/-+/-/g' | sed -E 's/^-|-$//g')
+          PROJECT_NAME=$(echo "$NORMALIZED" | cut -c1-100)
           echo "Deploying project: $PROJECT_NAME"
           # If VERCEL_ORG_ID is set, pass --org, otherwise omit
           if [ -n "$VERCEL_ORG_ID" ]; then
-            # use --scope instead of deprecated --team
-            vercel --confirm --token "$VERCEL_TOKEN" --cwd build/wwwroot --prod --scope "$VERCEL_ORG_ID" --project "$PROJECT_NAME"
+            # use --scope and --name to specify target project
+            vercel --confirm --token "$VERCEL_TOKEN" --cwd build/wwwroot --prod --scope "$VERCEL_ORG_ID" --name "$PROJECT_NAME"
           else
-            vercel --confirm --token "$VERCEL_TOKEN" --cwd build/wwwroot --prod --project "$PROJECT_NAME"
+            vercel --confirm --token "$VERCEL_TOKEN" --cwd build/wwwroot --prod --name "$PROJECT_NAME"
+          fi
           fi
