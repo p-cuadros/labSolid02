@@ -38,9 +38,10 @@ jobs:
           fi
           echo "Ensuring Vercel project exists: $PROJECT_NAME"
           if [ -n "$VERCEL_ORG_ID" ]; then
-            vercel projects add "$PROJECT_NAME" --team "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --yes || echo "Project may already exist; continuing..."
+            # --team is deprecated; use --scope and use --confirm to skip prompts
+            vercel projects add "$PROJECT_NAME" --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --confirm || echo "Project may already exist; continuing..."
           else
-            vercel projects add "$PROJECT_NAME" --token "$VERCEL_TOKEN" --yes || echo "Project may already exist; continuing..."
+            vercel projects add "$PROJECT_NAME" --token "$VERCEL_TOKEN" --confirm || echo "Project may already exist; continuing..."
           fi
 
       - name: Deploy to Vercel
@@ -52,7 +53,8 @@ jobs:
           echo "Deploying project: $PROJECT_NAME"
           # If VERCEL_ORG_ID is set, pass --org, otherwise omit
           if [ -n "$VERCEL_ORG_ID" ]; then
-            vercel --confirm --token "$VERCEL_TOKEN" --cwd build/wwwroot --prod --team "$VERCEL_ORG_ID" --project "$PROJECT_NAME"
+            # use --scope instead of deprecated --team
+            vercel --confirm --token "$VERCEL_TOKEN" --cwd build/wwwroot --prod --scope "$VERCEL_ORG_ID" --project "$PROJECT_NAME"
           else
             vercel --confirm --token "$VERCEL_TOKEN" --cwd build/wwwroot --prod --project "$PROJECT_NAME"
           fi
