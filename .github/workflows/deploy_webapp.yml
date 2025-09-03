@@ -39,9 +39,9 @@ jobs:
           echo "Ensuring Vercel project exists: $PROJECT_NAME"
           if [ -n "$VERCEL_ORG_ID" ]; then
             # --team is deprecated; use --scope and use --confirm to skip prompts
-            vercel projects add "$PROJECT_NAME" --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --confirm || echo "Project may already exist; continuing..."
+            vercel projects add "$PROJECT_NAME" --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" || echo "Project may already exist; continuing..."
           else
-            vercel projects add "$PROJECT_NAME" --token "$VERCEL_TOKEN" --confirm || echo "Project may already exist; continuing..."
+            vercel projects add "$PROJECT_NAME" --token "$VERCEL_TOKEN" || echo "Project may already exist; continuing..."
           fi
 
       - name: Deploy to Vercel
