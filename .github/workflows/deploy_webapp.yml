@@ -57,11 +57,34 @@ jobs:
           NORMALIZED=$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/-+/-/g' | sed -E 's/^-|-$//g')
           PROJECT_NAME=$(echo "$NORMALIZED" | cut -c1-100)
           echo "Deploying project: $PROJECT_NAME"
-          # If VERCEL_ORG_ID is set, pass --org, otherwise omit
-          if [ -n "$VERCEL_ORG_ID" ]; then
-            # use --scope and --name to specify target project
-            vercel --confirm --token "$VERCEL_TOKEN" --cwd build/wwwroot --prod --scope "$VERCEL_ORG_ID" --name "$PROJECT_NAME"
-          else
-            vercel --confirm --token "$VERCEL_TOKEN" --cwd build/wwwroot --prod --name "$PROJECT_NAME"
+          # If VERCEL_ORG_ID is set, try to resolve project id using vercel CLI before deploying
+          if [ -n "$VERCEL_ORG_ID" ] && [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "Resolving project id via Vercel CLI..."
+            # Try modern subcommand
+            if vercel projects ls --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" >/dev/null 2>&1; then
+              # parse output: find line with project name and extract id (second column or last)
+              proj_line=$(vercel projects ls --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" | awk -v name="$PROJECT_NAME" '$0 ~ name {print $0; exit}') || true
+            else
+              # fallback to 'vercel list' which may be available
+              proj_line=$(vercel list --token "$VERCEL_TOKEN" | awk -v name="$PROJECT_NAME" '$0 ~ name {print $0; exit}') || true
+            fi
+            if [ -n "$proj_line" ]; then
+              # attempt to extract an id-looking token (uuid) from the line
+              found_id=$(echo "$proj_line" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -n1 || true)
+              if [ -n "$found_id" ]; then
+                export VERCEL_PROJECT_ID="$found_id"
+                echo "Resolved VERCEL_PROJECT_ID=$VERCEL_PROJECT_ID"
+              else
+                echo "Couldn't parse project id from CLI output; proceeding without explicit project id."
+              fi
+            else
+              echo "Project not found in CLI listing; proceeding without explicit project id."
+            fi
           fi
+
+          # Deploy (prefer --confirm, pass --scope if provided). Some older CLI versions accept different flags.
+          if [ -n "$VERCEL_ORG_ID" ]; then
+            vercel --yes --token "$VERCEL_TOKEN" --cwd build/wwwroot --prod --scope "$VERCEL_ORG_ID" --name "$PROJECT_NAME"
+          else
+            vercel --yes --token "$VERCEL_TOKEN" --cwd build/wwwroot --prod --name "$PROJECT_NAME"
           fi
