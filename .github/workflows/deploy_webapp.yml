@@ -18,10 +18,10 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore
-        run: dotnet restore SOLIDapp.Web/SOLIDapp.Web.csproj
+        run: dotnet restore SOLIDapp/SOLIDapp.Web/SOLIDapp.Web.csproj
 
       - name: Publish Blazor WASM
-        run: dotnet publish SOLIDapp.Web/SOLIDapp.Web.csproj -c Release -o build
+        run: dotnet publish SOLIDapp/SOLIDapp.Web/SOLIDapp.Web.csproj -c Release -o build
 
       - name: Install Vercel CLI
         run: npm install -g vercel
