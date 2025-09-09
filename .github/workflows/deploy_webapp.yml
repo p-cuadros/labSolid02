@@ -49,6 +49,7 @@ jobs:
 
       - name: Get Vercel Project ID
         id: get_project_id
+        shell: bash
         run: |
           # Reemplaza con el nombre de tu proyecto
           PROJECT_NAME=$(echo ${{ github.event.repository.name }} | tr '[:upper:]' '[:lower:]')
