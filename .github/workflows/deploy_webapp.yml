@@ -51,7 +51,7 @@ jobs:
         id: get_project_id
         run: |
           # Reemplaza con el nombre de tu proyecto
-          PROJECT_NAME=${{ github.event.repository.name }}
+          PROJECT_NAME=${{ github.event.repository.name }} | tr '[:upper:]' '[:lower:]'
           echo "Project Name: $PROJECT_NAME"
           # Listar proyectos en la organización y filtrar por nombre
           vercel projects ls --token ${{ secrets.VERCEL_TOKEN }} --json > projects.json
