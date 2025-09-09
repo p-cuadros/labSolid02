@@ -58,50 +58,22 @@ jobs:
           PROJECTS_JSON=$(vercel projects ls --token ${{ secrets.VERCEL_TOKEN }} --json)
           echo "Projects JSON: $PROJECTS_JSON"
           PROJECT_ID=$(echo $PROJECTS_JSON | jq -r '.projects[] | select(.name == "labsolid02") | .id')
-          # PROJECT_ID=$(echo $PROJECTS_JSON | jq -r '.projects[] | select(.name == "$PROJECT_NAME") | .id')
+          PROJECTID=$(echo $PROJECTS_JSON | jq -r '.projects[] | select(.name == "$PROJECT_NAME") | .id')
           # PROJECT_ID=$( cat projects.json | jq -r --arg PROJECT_NAME "$PROJECT_NAME" '.[] | select(.name == $PROJECT_NAME) | .id')
           # PROJECT_ID=$(echo $PROJECTS_JSON | jq -r --arg PROJECT_NAME "$PROJECT_NAME" '.projects[] | select(.name == $PROJECT_NAME) | .id')
           # Mostrar el Project ID
           echo "Project ID: $PROJECT_ID"
+          echo "ProjectID: $PROJECTID"
           # Guardar el Project ID como un output
-          echo "::set-output name=project_id::$PROJECT_ID"
+          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
 
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: "prj_H5dxJkjvuCspqjtRD06ECpEnULoR"
+          VERCEL_PROJECT_ID: ${{ steps.get_project_id.outputs.project_id }}
           PROJECT_NAME: ${{ github.event.repository.name }}
         run: |
-          # Normalize project name before deploy
-          NORMALIZED=$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/-+/-/g' | sed -E 's/^-|-$//g')
-          PROJECT_NAME=$(echo "$NORMALIZED" | cut -c1-100)
-          echo "Deploying project: $PROJECT_NAME"
-          # If VERCEL_ORG_ID is set, try to resolve project id using vercel CLI before deploying
-          if [ -n "$VERCEL_ORG_ID" ] && [ -z "$VERCEL_PROJECT_ID" ]; then
-            echo "Resolving project id via Vercel CLI..."
-            # Try modern subcommand
-            if vercel projects ls --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" >/dev/null 2>&1; then
-              # parse output: find line with project name and extract id (second column or last)
-              proj_line=$(vercel projects ls --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" | awk -v name="$PROJECT_NAME" '$0 ~ name {print $0; exit}') || true
-            else
-              # fallback to 'vercel list' which may be available
-              proj_line=$(vercel list --token "$VERCEL_TOKEN" | awk -v name="$PROJECT_NAME" '$0 ~ name {print $0; exit}') || true
-            fi
-            if [ -n "$proj_line" ]; then
-              # attempt to extract an id-looking token (uuid) from the line
-              found_id=$(echo "$proj_line" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -n1 || true)
-              if [ -n "$found_id" ]; then
-                export VERCEL_PROJECT_ID="$found_id"
-                echo "Resolved VERCEL_PROJECT_ID=$VERCEL_PROJECT_ID"
-              else
-                echo "Couldn't parse project id from CLI output; proceeding without explicit project id."
-              fi
-            else
-              echo "Project not found in CLI listing; proceeding without explicit project id."
-            fi
-          fi
-
           # Deploy (prefer --confirm, pass --scope if provided). Some older CLI versions accept different flags.
           if [ -n "$VERCEL_ORG_ID" ]; then
             vercel --yes --token "$VERCEL_TOKEN" --cwd build/wwwroot --prod --scope "$VERCEL_ORG_ID" --name "$PROJECT_NAME"
