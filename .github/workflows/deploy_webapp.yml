@@ -52,14 +52,14 @@ jobs:
         run: |
           # Reemplaza con el nombre de tu proyecto
           PROJECT_NAME=${{ github.event.repository.name }}
+          echo "Project Name: $PROJECT_NAME"
           # Listar proyectos en la organización y filtrar por nombre
           vercel projects ls --token ${{ secrets.VERCEL_TOKEN }} --json > projects.json
           cat projects.json
           PROJECTS_JSON=$(vercel projects ls --token ${{ secrets.VERCEL_TOKEN }} --json)
-          # PROJECT_ID=$(echo $PROJECTS_JSON | jq -r '.projects[] | select(.name == $PROJECT_NAME) | .id')
+          PROJECT_ID=$(echo $PROJECTS_JSON | jq -r '.projects[] | select(.name == "$PROJECT_NAME)" | .id')
           # PROJECT_ID=$( cat projects.json | jq -r --arg PROJECT_NAME "$PROJECT_NAME" '.[] | select(.name == $PROJECT_NAME) | .id')
-          PROJECT_ID=$(echo $PROJECTS_JSON | jq -r --arg PROJECT_NAME "$PROJECT_NAME" '.projects[] | select(.name == $PROJECT_NAME) | .id')
-
+          # PROJECT_ID=$(echo $PROJECTS_JSON | jq -r --arg PROJECT_NAME "$PROJECT_NAME" '.projects[] | select(.name == $PROJECT_NAME) | .id')
           # Mostrar el Project ID
           echo "Project ID: $PROJECT_ID"
           # Guardar el Project ID como un output
