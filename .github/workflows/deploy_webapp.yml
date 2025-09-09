@@ -47,10 +47,24 @@ jobs:
             vercel projects add "$PROJECT_NAME" --token "$VERCEL_TOKEN" || echo "Project may already exist; continuing..."
           fi
 
+      - name: Get Vercel Project ID
+        id: get_project_id
+        run: |
+          # Reemplaza con el nombre de tu proyecto
+          PROJECT_NAME="your-project-name"
+          # Listar proyectos en la organización y filtrar por nombre
+          PROJECT_ID=$(vercel projects ls --token ${{ secrets.VERCEL_TOKEN }} --json | jq -r --arg PROJECT_NAME "$PROJECT_NAME" \
+            '.[] | select(.name == $PROJECT_NAME) | .id')
+          # Mostrar el Project ID
+          echo "Project ID: $PROJECT_ID"
+          # Guardar el Project ID como un output
+          echo "::set-output name=project_id::$PROJECT_ID"
+
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ steps.get_project_id.outputs.project_id }}
           PROJECT_NAME: ${{ github.event.repository.name }}
         run: |
           # Normalize project name before deploy
