@@ -58,9 +58,7 @@ jobs:
           PROJECTS_JSON=$(vercel projects ls --token ${{ secrets.VERCEL_TOKEN }} --json)
           echo "Projects JSON: $PROJECTS_JSON"
           PROJECT_ID=$(echo $PROJECTS_JSON | jq -r '.projects[] | select(.name == "labsolid02") | .id')
-          PROJECTID=$(echo $PROJECTS_JSON | jq -r '.projects[] | select(.name == "$PROJECT_NAME") | .id')
-          # PROJECT_ID=$( cat projects.json | jq -r --arg PROJECT_NAME "$PROJECT_NAME" '.[] | select(.name == $PROJECT_NAME) | .id')
-          # PROJECT_ID=$(echo $PROJECTS_JSON | jq -r --arg PROJECT_NAME "$PROJECT_NAME" '.projects[] | select(.name == $PROJECT_NAME) | .id')
+          PROJECTID=$(echo $PROJECTS_JSON | jq -r '.projects[] | select(.name=="$PROJECT_NAME") | .id')
           # Mostrar el Project ID
           echo "Project ID: $PROJECT_ID"
           echo "ProjectID: $PROJECTID"
