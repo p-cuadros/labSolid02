@@ -38,24 +38,21 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         run: |
-          # Reemplaza con el nombre de tu proyecto
-          echo "Project Name: ${{ steps.set_project_name.outputs.PROJECT_NAME }}"
           # Listar proyectos en la organización y filtrar por nombre
           PROJECTS_JSON=$(vercel projects ls --token ${{ secrets.VERCEL_TOKEN }} --json)
           echo "Projects JSON: $PROJECTS_JSON"
-          PROJECT_ID=$(echo $PROJECTS_JSON | jq -r '.projects[] | select(.name == "labsolid02") | .id')
-          PROJECTID=$(echo $PROJECTS_JSON | jq -r '.projects[] | select(.name=="${{ steps.set_project_name.outputs.PROJECT_NAME }}") | .id')
+          PROJECT_ID=$(echo $PROJECTS_JSON | jq -r '.projects[] | select(.name=="${{ steps.set_project_name.outputs.PROJECT_NAME }}") | .id')
           # Mostrar el Project ID
           echo "Project ID: $PROJECT_ID"
-          echo "ProjectID: $PROJECTID"
-          # Guardar el Project ID como un output
           echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
 
       - name: Create Vercel project (CLI, idempotent)
+        if: steps.get_project_id.outputs.project_id == ''
+        shell: bash
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          PROJECT_NAME: ${{ github.event.repository.name }}
+          PROJECT_NAME: ${{ steps.set_project_name.outputs.PROJECT_NAME }}
         run: |
           if [ -z "$VERCEL_TOKEN" ]; then
             echo "VERCEL_TOKEN not set; skipping project creation."
