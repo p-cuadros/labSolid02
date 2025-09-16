@@ -26,6 +26,29 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel
 
+      - name: Get Vercel Project ID
+        id: get_project_id
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          PROJECT_NAME: ${{ github.event.repository.name }} | tr '[:upper:]' '[:lower:]'
+        run: |
+          # Reemplaza con el nombre de tu proyecto
+          PROJECT_NAME=$(echo ${{ github.event.repository.name }} | tr '[:upper:]' '[:lower:]')
+          echo "Project Name: $PROJECT_NAME"
+          echo "Project Name2: ${{ env.PROJECT_NAME }}"
+          # Listar proyectos en la organización y filtrar por nombre
+          PROJECTS_JSON=$(vercel projects ls --token ${{ secrets.VERCEL_TOKEN }} --json)
+          echo "Projects JSON: $PROJECTS_JSON"
+          PROJECT_ID=$(echo $PROJECTS_JSON | jq -r '.projects[] | select(.name == "labsolid02") | .id')
+          PROJECTID=$(echo $PROJECTS_JSON | jq -r '.projects[] | select(.name=="${{ env.PROJECT_NAME }}") | .id')
+          # Mostrar el Project ID
+          echo "Project ID: $PROJECT_ID"
+          echo "ProjectID: $PROJECTID"
+          # Guardar el Project ID como un output
+          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
+
       - name: Create Vercel project (CLI, idempotent)
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -46,24 +69,6 @@ jobs:
           else
             vercel projects add "$PROJECT_NAME" --token "$VERCEL_TOKEN" || echo "Project may already exist; continuing..."
           fi
-
-      - name: Get Vercel Project ID
-        id: get_project_id
-        shell: bash
-        run: |
-          # Reemplaza con el nombre de tu proyecto
-          PROJECT_NAME=$(echo ${{ github.event.repository.name }} | tr '[:upper:]' '[:lower:]')
-          echo "Project Name: $PROJECT_NAME"
-          # Listar proyectos en la organización y filtrar por nombre
-          PROJECTS_JSON=$(vercel projects ls --token ${{ secrets.VERCEL_TOKEN }} --json)
-          echo "Projects JSON: $PROJECTS_JSON"
-          PROJECT_ID=$(echo $PROJECTS_JSON | jq -r '.projects[] | select(.name == "labsolid02") | .id')
-          PROJECTID=$(echo $PROJECTS_JSON | jq -r '.projects[] | select(.name=="$PROJECT_NAME") | .id')
-          # Mostrar el Project ID
-          echo "Project ID: $PROJECT_ID"
-          echo "ProjectID: $PROJECTID"
-          # Guardar el Project ID como un output
-          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
 
       - name: Deploy to Vercel
         env:
