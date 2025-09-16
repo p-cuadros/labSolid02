@@ -74,7 +74,7 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ steps.get_project_id.outputs.project_id }}
-          PROJECT_NAME: ${{ github.event.repository.name }}
+          PROJECT_NAME: ${{ steps.set_project_name.outputs.PROJECT_NAME }}
         run: |
           # Deploy (prefer --confirm, pass --scope if provided). Some older CLI versions accept different flags.
           if [ -n "$VERCEL_ORG_ID" ]; then
