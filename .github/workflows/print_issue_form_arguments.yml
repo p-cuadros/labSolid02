@@ -4,6 +4,8 @@ on:
   issues:
     types: [opened]
 
+permissions: {}
+
 jobs:
   print-arguments:
     if: contains(github.event.issue.body, '### suscription_id')
