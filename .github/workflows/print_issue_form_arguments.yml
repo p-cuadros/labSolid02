@@ -1,0 +1,39 @@
+name: Print Issue Form Arguments
+
+on:
+  issues:
+    types: [opened]
+
+permissions: {}
+
+jobs:
+  print-arguments:
+    if: contains(github.event.issue.body, '### suscription_id')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract and print values
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          extract_value() {
+            local key="$1"
+            awk -v header="### ${key}" '
+              $0 == header {
+                while (getline) {
+                  gsub(/\r/, "")
+                  if (length($0) > 0) {
+                    print $0
+                    exit
+                  }
+                }
+              }
+            ' <<< "$ISSUE_BODY"
+          }
+
+          SUSCRIPTION_ID="$(extract_value suscription_id)"
+          RESOURCE_GROUP="$(extract_value resource_group)"
+          RESOURCE_NAME="$(extract_value resource_name)"
+
+          echo "suscription_id=${SUSCRIPTION_ID}"
+          echo "resource_group=${RESOURCE_GROUP}"
+          echo "resource_name=${RESOURCE_NAME}"
