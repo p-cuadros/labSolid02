@@ -1,0 +1,32 @@
+name: Custom Resource Request
+description: Provide the required Azure resource identifiers.
+title: "[Custom Resource Request]: "
+labels:
+  - custom-request
+body:
+  - type: input
+    id: suscription_id
+    attributes:
+      label: suscription_id
+      description: Enter the Azure subscription identifier.
+      placeholder: 00000000-0000-0000-0000-000000000000
+    validations:
+      required: true
+
+  - type: input
+    id: resource_group
+    attributes:
+      label: resource_group
+      description: Enter the Azure resource group name.
+      placeholder: my-resource-group
+    validations:
+      required: true
+
+  - type: input
+    id: resource_name
+    attributes:
+      label: resource_name
+      description: Enter the Azure resource name.
+      placeholder: my-resource
+    validations:
+      required: true
