@@ -1,6 +1,6 @@
 name: Test Deploy Request
 description: Provide the required Azure resource identifiers.
-title: "[Custom Resource Request]: "
+title: "[Test Deploy Request]: "
 labels:
   - deploy
 body:
@@ -30,3 +30,11 @@ body:
       placeholder: my-resource
     validations:
       required: true
+
+  - type: input
+    id: resource_type
+    attributes:
+      label: resource_type
+      description: Enter the Azure resource type.
+      placeholder: my-resource-type
+
